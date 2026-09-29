@@ -17,7 +17,9 @@ import org.springframework.test.context.TestPropertySource;
     "spring.datasource.driver-class-name=org.h2.Driver",
     "spring.datasource.username=sa",
     "spring.datasource.password=",
-    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect"
+    "spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.H2Dialect",
+    "mat.jwt.secret=c3VwZXItc2VjcmV0LWtleS1mb3ItbWF0LWFwcGxpY2F0aW9uLWp3dC1hdXRoZW50aWNhdGlvbg==",
+    "mat.jwt.expiration=86400000"
 })
 class MatApplicationTests {
 
