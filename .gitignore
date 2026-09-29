@@ -1,0 +1,22 @@
+# Maven build output
+target/
+*.class
+
+# Local Maven installation
+apache-maven-*/
+
+# IDE files
+.idea/
+*.iml
+.vscode/
+*.DS_Store
+
+# Environment / secrets
+application-local.properties
+*.local.properties
+.env
+.env.*
+
+# Logs
+*.log
+logs/
