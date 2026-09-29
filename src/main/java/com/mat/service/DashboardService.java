@@ -226,12 +226,54 @@ public class DashboardService {
                     .sum();
         }
 
-        // ── Net Movement = Purchases + Transfer In - Transfer Out ──
+        // ── 6. Net Movement = Purchases + Transfer In - Transfer Out ──
         int netMovement = totalPurchases + totalTransferIn - totalTransferOut;
 
-        // ── Opening Balance = Closing Balance - Net Movement ──
-        // (When a date filter is applied, this represents the balance before that day's activity)
-        int openingBalance = closingBalance - netMovement;
+        // ── 7. Opening Balance ──
+        int openingBalance;
+        if (date != null) {
+            // For a selected date range, calculate opening balance from stock & movement records prior to startOfDay
+            final Long filterBaseId = baseId;
+            final String filterEquipmentType = equipmentType;
+
+            int purchasesBefore = purchaseRepository.findAll().stream()
+                    .filter(p -> p.getPurchaseDate().isBefore(startOfDay))
+                    .filter(p -> filterBaseId == null || p.getBase().getId().equals(filterBaseId))
+                    .filter(p -> filterEquipmentType == null || filterEquipmentType.isEmpty()
+                            || filterEquipmentType.equals(p.getEquipment().getEquipmentType()))
+                    .mapToInt(Purchase::getQuantity)
+                    .sum();
+
+            int transferInBefore = transferRepository.findAll().stream()
+                    .filter(t -> t.getTransferDate().isBefore(startOfDay))
+                    .filter(t -> filterBaseId == null || t.getToBase().getId().equals(filterBaseId))
+                    .filter(t -> filterEquipmentType == null || filterEquipmentType.isEmpty()
+                            || filterEquipmentType.equals(t.getEquipment().getEquipmentType()))
+                    .mapToInt(Transfer::getQuantity)
+                    .sum();
+
+            int transferOutBefore = transferRepository.findAll().stream()
+                    .filter(t -> t.getTransferDate().isBefore(startOfDay))
+                    .filter(t -> filterBaseId == null || t.getFromBase().getId().equals(filterBaseId))
+                    .filter(t -> filterEquipmentType == null || filterEquipmentType.isEmpty()
+                            || filterEquipmentType.equals(t.getEquipment().getEquipmentType()))
+                    .mapToInt(Transfer::getQuantity)
+                    .sum();
+
+            int expendedBefore = expenditureRepository.findAll().stream()
+                    .filter(e -> e.getExpenditureDate().isBefore(startOfDay))
+                    .filter(e -> filterBaseId == null || e.getBase().getId().equals(filterBaseId))
+                    .filter(e -> filterEquipmentType == null || filterEquipmentType.isEmpty()
+                            || filterEquipmentType.equals(e.getEquipment().getEquipmentType()))
+                    .mapToInt(Expenditure::getQuantity)
+                    .sum();
+
+            openingBalance = purchasesBefore + transferInBefore - transferOutBefore - expendedBefore;
+        } else {
+            // When no date filter is selected, Opening Balance accounts for lifetime expenditures
+            // Opening Balance = Closing Balance - Net Movement + Total Expended
+            openingBalance = closingBalance - netMovement + totalExpended;
+        }
 
         // Set all values
         response.setOpeningBalance(openingBalance);
