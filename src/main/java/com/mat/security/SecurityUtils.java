@@ -19,8 +19,18 @@ public class SecurityUtils {
      */
     public static String getCurrentUsername() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.isAuthenticated() && auth.getPrincipal() instanceof String) {
-            return (String) auth.getPrincipal();
+        if (auth != null && auth.isAuthenticated()) {
+            Object principal = auth.getPrincipal();
+            if (principal instanceof String) {
+                String username = (String) principal;
+                if (!"anonymousUser".equalsIgnoreCase(username)) {
+                    return username;
+                }
+            } else if (principal instanceof org.springframework.security.core.userdetails.UserDetails) {
+                return ((org.springframework.security.core.userdetails.UserDetails) principal).getUsername();
+            } else if (auth.getName() != null && !"anonymousUser".equalsIgnoreCase(auth.getName())) {
+                return auth.getName();
+            }
         }
         return null;
     }
@@ -30,7 +40,7 @@ public class SecurityUtils {
      */
     public static Long getCurrentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getCredentials() instanceof Long) {
+        if (auth != null && auth.isAuthenticated() && auth.getCredentials() instanceof Long) {
             return (Long) auth.getCredentials();
         }
         return null;

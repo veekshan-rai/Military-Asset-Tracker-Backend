@@ -56,14 +56,24 @@ public class DashboardController {
             @RequestParam(required = false) String equipmentType,
             @RequestParam(required = false) LocalDate date) {
 
-        // RBAC restriction: BASE_COMMANDER is restricted to their assigned base
-        if (SecurityUtils.isBaseCommander()) {
+        // RBAC restriction: BASE_COMMANDER and LOGISTICS_OFFICER are restricted to their assigned base
+        if (SecurityUtils.isBaseCommander() || SecurityUtils.isLogisticsOfficer()) {
             String username = SecurityUtils.getCurrentUsername();
+            User user = null;
             if (username != null) {
-                User user = userRepository.findByUsername(username).orElse(null);
-                if (user != null && user.getAssignedBase() != null) {
-                    baseId = user.getAssignedBase().getId();
+                user = userRepository.findByUsername(username).orElse(null);
+            }
+            if (user == null) {
+                Long userId = SecurityUtils.getCurrentUserId();
+                if (userId != null) {
+                    user = userRepository.findById(userId).orElse(null);
                 }
+            }
+
+            if (user != null && user.getAssignedBase() != null) {
+                baseId = user.getAssignedBase().getId();
+            } else {
+                return ResponseEntity.ok(new DashboardResponse());
             }
         }
 

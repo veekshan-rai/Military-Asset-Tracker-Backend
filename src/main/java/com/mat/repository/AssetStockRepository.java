@@ -29,6 +29,15 @@ public interface AssetStockRepository extends JpaRepository<AssetStock, Long> {
      */
     Optional<AssetStock> findByEquipmentAndBase(Equipment equipment, Base base);
 
+    /**
+     * Find the stock record for a given equipment ID and base ID.
+     */
+    Optional<AssetStock> findByEquipment_IdAndBase_Id(Long equipmentId, Long baseId);
+
+    default Optional<AssetStock> findByEquipmentIdAndBaseId(Long equipmentId, Long baseId) {
+        return findByEquipment_IdAndBase_Id(equipmentId, baseId);
+    }
+
     /** Find all stock records for a given base */
     java.util.List<AssetStock> findByBase_Id(Long baseId);
 

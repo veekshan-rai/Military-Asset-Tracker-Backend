@@ -2,21 +2,27 @@ package com.mat.service;
 
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mat.entity.Base;
 import com.mat.entity.Equipment;
+import com.mat.entity.Role;
 import com.mat.entity.Transfer;
+import com.mat.entity.User;
 import com.mat.repository.BaseRepository;
 import com.mat.repository.EquipmentRepository;
 import com.mat.repository.TransferRepository;
+import com.mat.repository.UserRepository;
+import com.mat.security.SecurityUtils;
 
 /**
  * TransferService
  *
  * Contains the business logic for managing Transfer records.
- * When a transfer is saved, AssetStock is automatically updated:
+ * When a transfer is saved, the authenticated user is automatically set as transferredBy,
+ * and AssetStock is automatically updated:
  *   - fromBase stock is decreased
  *   - toBase stock is increased
  *
@@ -30,17 +36,20 @@ public class TransferService {
     private final BaseRepository baseRepository;
     private final AssetStockService assetStockService;
     private final AuditLogService auditLogService;
+    private final UserRepository userRepository;
 
     public TransferService(TransferRepository transferRepository,
                            EquipmentRepository equipmentRepository,
                            BaseRepository baseRepository,
                            AssetStockService assetStockService,
-                           AuditLogService auditLogService) {
+                           AuditLogService auditLogService,
+                           UserRepository userRepository) {
         this.transferRepository = transferRepository;
         this.equipmentRepository = equipmentRepository;
         this.baseRepository = baseRepository;
         this.assetStockService = assetStockService;
         this.auditLogService = auditLogService;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -105,6 +114,21 @@ public class TransferService {
             transfer.setToBase(tb);
         }
 
+        // Automatically assign authenticated user from SecurityContext
+        User authenticatedUser = getAuthenticatedUser();
+        transfer.setTransferredBy(authenticatedUser);
+
+        // Enforce base-scope validation for BASE_COMMANDER (can only transfer FROM their assigned base)
+        if (authenticatedUser.getRole() == Role.BASE_COMMANDER || SecurityUtils.isBaseCommander()) {
+            Base assignedBase = authenticatedUser.getAssignedBase();
+            if (assignedBase == null || assignedBase.getId() == null
+                    || !assignedBase.getId().equals(transfer.getFromBase().getId())) {
+                throw new AccessDeniedException(
+                        "Access denied: Base Commander can only transfer assets from their assigned base."
+                );
+            }
+        }
+
         // Save the transfer transaction record
         Transfer saved = transferRepository.save(transfer);
 
@@ -134,6 +158,24 @@ public class TransferService {
         );
 
         return saved;
+    }
+
+    private User getAuthenticatedUser() {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username != null) {
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null) {
+                return user;
+            }
+        }
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId != null) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                return user;
+            }
+        }
+        throw new IllegalStateException("Authentication required: No authenticated user found in security context.");
     }
 
     /**

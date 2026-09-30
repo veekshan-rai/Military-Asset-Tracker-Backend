@@ -10,15 +10,19 @@ import org.springframework.transaction.annotation.Transactional;
 import com.mat.entity.Base;
 import com.mat.entity.Equipment;
 import com.mat.entity.Purchase;
+import com.mat.entity.User;
 import com.mat.repository.BaseRepository;
 import com.mat.repository.EquipmentRepository;
 import com.mat.repository.PurchaseRepository;
+import com.mat.repository.UserRepository;
+import com.mat.security.SecurityUtils;
 
 /**
  * PurchaseService
  *
  * Contains the business logic for managing Purchase records.
- * When a purchase is saved, AssetStock is automatically updated and audit log recorded.
+ * When a purchase is saved, the authenticated user is automatically set as recordedBy,
+ * AssetStock is automatically updated, and an audit log is recorded.
  */
 @Service
 public class PurchaseService {
@@ -28,26 +32,31 @@ public class PurchaseService {
     private final BaseRepository baseRepository;
     private final AssetStockService assetStockService;
     private final AuditLogService auditLogService;
+    private final UserRepository userRepository;
 
     public PurchaseService(PurchaseRepository purchaseRepository,
                            EquipmentRepository equipmentRepository,
                            BaseRepository baseRepository,
                            AssetStockService assetStockService,
-                           AuditLogService auditLogService) {
+                           AuditLogService auditLogService,
+                           UserRepository userRepository) {
         this.purchaseRepository = purchaseRepository;
         this.equipmentRepository = equipmentRepository;
         this.baseRepository = baseRepository;
         this.assetStockService = assetStockService;
         this.auditLogService = auditLogService;
+        this.userRepository = userRepository;
     }
 
     /**
      * Saves a Purchase record and updates AssetStock.
      * Both operations succeed or fail together (@Transactional).
+     * Automatically assigns the currently authenticated user as recordedBy.
      *
      * @param purchase the Purchase object to save
      * @return the saved Purchase (now includes full entity references and generated id)
      * @throws IllegalArgumentException if any validation rule fails
+     * @throws IllegalStateException if no authenticated user is found
      */
     @Transactional
     public Purchase savePurchase(Purchase purchase) {
@@ -79,6 +88,10 @@ public class PurchaseService {
             purchase.setBase(b);
         }
 
+        // Automatically assign authenticated user from SecurityContext
+        User authenticatedUser = getAuthenticatedUser();
+        purchase.setRecordedBy(authenticatedUser);
+
         // Save the purchase transaction record
         Purchase saved = purchaseRepository.save(purchase);
 
@@ -100,6 +113,24 @@ public class PurchaseService {
         );
 
         return saved;
+    }
+
+    private User getAuthenticatedUser() {
+        String username = SecurityUtils.getCurrentUsername();
+        if (username != null) {
+            User user = userRepository.findByUsername(username).orElse(null);
+            if (user != null) {
+                return user;
+            }
+        }
+        Long userId = SecurityUtils.getCurrentUserId();
+        if (userId != null) {
+            User user = userRepository.findById(userId).orElse(null);
+            if (user != null) {
+                return user;
+            }
+        }
+        throw new IllegalStateException("Authentication required: No authenticated user found in security context.");
     }
 
     /**
