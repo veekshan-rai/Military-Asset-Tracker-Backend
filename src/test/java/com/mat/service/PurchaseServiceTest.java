@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -180,5 +181,103 @@ class PurchaseServiceTest {
 
         Purchase noDate = new Purchase(testEquipment, testBase, 10, null, null);
         assertThrows(IllegalArgumentException.class, () -> purchaseService.savePurchase(noDate));
+    }
+
+    @Test
+    void testAdminCanPurchaseForAnyBase() {
+        Base mumbaiBase = new Base("Mumbai Base", "Location B");
+        mumbaiBase.setId(2L);
+
+        User adminUser = new User("admin01", "admin@mat.com", "pass", Role.ADMIN, null);
+        adminUser.setId(99L);
+
+        setSecurityContext("admin01", 99L, "ADMIN");
+        when(userRepository.findByUsername("admin01")).thenReturn(Optional.of(adminUser));
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(testEquipment));
+        when(baseRepository.findById(2L)).thenReturn(Optional.of(mumbaiBase));
+        when(purchaseRepository.save(any(Purchase.class))).thenAnswer(invocation -> {
+            Purchase p = invocation.getArgument(0);
+            p.setId(201L);
+            return p;
+        });
+
+        Purchase purchaseInput = new Purchase(testEquipment, mumbaiBase, 40, LocalDateTime.now(), null);
+        Purchase result = purchaseService.savePurchase(purchaseInput);
+
+        assertNotNull(result);
+        assertEquals(201L, result.getId());
+        assertEquals(2L, result.getBase().getId());
+        assertEquals("admin01", result.getRecordedBy().getUsername());
+        verify(purchaseRepository).save(any(Purchase.class));
+    }
+
+    @Test
+    void testBaseCommanderCanPurchaseForAssignedBase() {
+        User commander = new User("commander01", "cmd@mat.com", "pass", Role.BASE_COMMANDER, testBase);
+        commander.setId(20L);
+
+        setSecurityContext("commander01", 20L, "BASE_COMMANDER");
+        when(userRepository.findByUsername("commander01")).thenReturn(Optional.of(commander));
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(testEquipment));
+        when(baseRepository.findById(1L)).thenReturn(Optional.of(testBase));
+        when(purchaseRepository.save(any(Purchase.class))).thenAnswer(invocation -> {
+            Purchase p = invocation.getArgument(0);
+            p.setId(202L);
+            return p;
+        });
+
+        Purchase purchaseInput = new Purchase(testEquipment, testBase, 15, LocalDateTime.now(), null);
+        Purchase result = purchaseService.savePurchase(purchaseInput);
+
+        assertNotNull(result);
+        assertEquals(202L, result.getId());
+        assertEquals(1L, result.getBase().getId());
+        assertEquals("commander01", result.getRecordedBy().getUsername());
+        verify(purchaseRepository).save(any(Purchase.class));
+    }
+
+    @Test
+    void testBaseCommanderCannotPurchaseForAnotherBaseThrows403() {
+        Base mumbaiBase = new Base("Mumbai Base", "Location B");
+        mumbaiBase.setId(2L);
+
+        User commander = new User("commander01", "cmd@mat.com", "pass", Role.BASE_COMMANDER, testBase);
+        commander.setId(20L);
+
+        setSecurityContext("commander01", 20L, "BASE_COMMANDER");
+        when(userRepository.findByUsername("commander01")).thenReturn(Optional.of(commander));
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(testEquipment));
+        when(baseRepository.findById(2L)).thenReturn(Optional.of(mumbaiBase));
+
+        Purchase purchaseInput = new Purchase(testEquipment, mumbaiBase, 15, LocalDateTime.now(), null);
+
+        org.springframework.security.access.AccessDeniedException ex = assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> purchaseService.savePurchase(purchaseInput)
+        );
+
+        assertEquals("Access denied: Base Commander can only purchase assets for their assigned base.", ex.getMessage());
+        verify(purchaseRepository, never()).save(any(Purchase.class));
+    }
+
+    @Test
+    void testBaseCommanderWithoutAssignedBaseThrows403() {
+        User unassignedCommander = new User("unassignedCmd", "unassigned@mat.com", "pass", Role.BASE_COMMANDER, null);
+        unassignedCommander.setId(21L);
+
+        setSecurityContext("unassignedCmd", 21L, "BASE_COMMANDER");
+        when(userRepository.findByUsername("unassignedCmd")).thenReturn(Optional.of(unassignedCommander));
+        when(equipmentRepository.findById(1L)).thenReturn(Optional.of(testEquipment));
+        when(baseRepository.findById(1L)).thenReturn(Optional.of(testBase));
+
+        Purchase purchaseInput = new Purchase(testEquipment, testBase, 15, LocalDateTime.now(), null);
+
+        org.springframework.security.access.AccessDeniedException ex = assertThrows(
+                org.springframework.security.access.AccessDeniedException.class,
+                () -> purchaseService.savePurchase(purchaseInput)
+        );
+
+        assertEquals("Access denied: Base Commander can only purchase assets for their assigned base.", ex.getMessage());
+        verify(purchaseRepository, never()).save(any(Purchase.class));
     }
 }

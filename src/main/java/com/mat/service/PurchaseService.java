@@ -4,12 +4,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.mat.entity.Base;
 import com.mat.entity.Equipment;
 import com.mat.entity.Purchase;
+import com.mat.entity.Role;
 import com.mat.entity.User;
 import com.mat.repository.BaseRepository;
 import com.mat.repository.EquipmentRepository;
@@ -57,6 +59,7 @@ public class PurchaseService {
      * @return the saved Purchase (now includes full entity references and generated id)
      * @throws IllegalArgumentException if any validation rule fails
      * @throws IllegalStateException if no authenticated user is found
+     * @throws AccessDeniedException if Base Commander tries to purchase for an unassigned base
      */
     @Transactional
     public Purchase savePurchase(Purchase purchase) {
@@ -91,6 +94,17 @@ public class PurchaseService {
         // Automatically assign authenticated user from SecurityContext
         User authenticatedUser = getAuthenticatedUser();
         purchase.setRecordedBy(authenticatedUser);
+
+        // Enforce base-scope validation for BASE_COMMANDER (can only purchase for their assigned base)
+        if (authenticatedUser.getRole() == Role.BASE_COMMANDER || SecurityUtils.isBaseCommander()) {
+            Base assignedBase = authenticatedUser.getAssignedBase();
+            if (assignedBase == null || assignedBase.getId() == null
+                    || !assignedBase.getId().equals(purchase.getBase().getId())) {
+                throw new AccessDeniedException(
+                        "Access denied: Base Commander can only purchase assets for their assigned base."
+                );
+            }
+        }
 
         // Save the purchase transaction record
         Purchase saved = purchaseRepository.save(purchase);
