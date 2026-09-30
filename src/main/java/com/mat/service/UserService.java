@@ -5,14 +5,13 @@ import java.util.List;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.mat.entity.Role;
 import com.mat.entity.User;
 import com.mat.repository.UserRepository;
 
 /**
- * UserService
- *
- * Contains the business logic for managing User records.
- * Encodes passwords using BCrypt prior to saving.
+ * Service for managing User records.
+ * Encodes passwords using BCrypt and enforces role-based assigned base requirements.
  */
 @Service
 public class UserService {
@@ -25,13 +24,13 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    /**
-     * Saves a User record to the database after encoding their password.
-     *
-     * @param user the User object to save
-     * @return the saved User (with generated id)
-     */
     public User saveUser(User user) {
+        if (user.getRole() == Role.BASE_COMMANDER && user.getAssignedBase() == null) {
+            throw new IllegalArgumentException("Assigned base is required for Base Commander.");
+        }
+        if (user.getRole() == Role.LOGISTICS_OFFICER && user.getAssignedBase() == null) {
+            throw new IllegalArgumentException("Assigned base is required for Logistics Officer.");
+        }
         if (user.getPassword() != null && !user.getPassword().startsWith("$2a$") && !user.getPassword().startsWith("$2b$")) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         }
