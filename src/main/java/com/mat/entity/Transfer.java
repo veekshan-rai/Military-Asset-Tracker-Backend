@@ -12,22 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
- * Transfer entity
- *
- * Represents the movement of equipment from one military base to another.
- * Each transfer record captures:
- *   - WHAT was transferred (Equipment)
- *   - FROM which base (fromBase)
- *   - TO which base (toBase)
- *   - HOW MANY units were transferred (quantity)
- *   - WHEN the transfer occurred (transferDate)
- *   - WHO initiated it (transferredBy → User)
- *
- * A Transfer is both an outflow for the source base and an inflow for the
- * destination base. It moves stock between bases without changing the
- * overall system total.
- *
- * Database table: "transfers"
+ * Transfer entity representing movement of equipment between bases.
  */
 @Entity
 @Table(name = "transfers")

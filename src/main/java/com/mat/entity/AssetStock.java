@@ -11,28 +11,8 @@ import jakarta.persistence.Table;
 import jakarta.persistence.UniqueConstraint;
 
 /**
- * AssetStock entity
- *
- * Represents the CURRENT quantity of a specific equipment type at a specific base.
- * This is the live stock ledger — it always reflects the up-to-date balance.
- *
- * One row = one (equipment, base) combination.
- * The unique constraint on (equipment_id, base_id) ensures there is never
- * more than one stock record per equipment per base.
- *
- * Examples:
- *   - equipment: "AK-47",       base: "Bangalore",  quantity: 80
- *   - equipment: "AK-47",       base: "Mangalore",  quantity: 20
- *   - equipment: "Diesel Fuel", base: "Bangalore",  quantity: 5000
- *
- * How quantity changes over time:
- *   - Purchase  → quantity at the receiving base increases
- *   - Transfer  → quantity at fromBase decreases, quantity at toBase increases
- *   - Expenditure → quantity at the base decreases
- *
- * (The logic to update quantity will be added in the next step.)
- *
- * Database table: "asset_stock"
+ * AssetStock entity representing the current quantity of an equipment type at a base.
+ * Unique constraint on (equipment_id, base_id) ensures at most one record per item per base.
  */
 @Entity
 @Table(

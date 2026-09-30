@@ -13,18 +13,7 @@ import com.mat.entity.AssetStock;
 import com.mat.service.AssetStockService;
 
 /**
- * AssetStockController
- *
- * REST API for querying current stock levels across bases.
- *
- * Role-based authorization / filtering:
- *   - ADMIN: can view stock across all bases (or filter by baseId)
- *   - BASE_COMMANDER: can view ONLY stock belonging to their assigned base
- *   - LOGISTICS_OFFICER: can view stock across all bases (or filter by baseId)
- *
- * Endpoints:
- *   GET /api/stock              → List stock records (RBAC filtered)
- *   GET /api/stock/base/{baseId} → List stock records for a specific base (RBAC filtered)
+ * REST API for querying current stock levels across bases with role-based access control.
  */
 @RestController
 @RequestMapping("/api/stock")

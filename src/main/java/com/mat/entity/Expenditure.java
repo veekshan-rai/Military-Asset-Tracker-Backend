@@ -12,21 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
- * Expenditure entity
- *
- * Represents the consumption, loss, or usage of equipment at a base.
- * Each expenditure record captures:
- *   - WHAT was expended (Equipment)
- *   - WHERE it was expended (Base)
- *   - HOW MANY units were consumed (quantity)
- *   - WHEN the expenditure occurred (expenditureDate)
- *   - WHY it was expended (reason)
- *   - WHO recorded it (recordedBy → User)
- *
- * An Expenditure is an "outflow" event — it reduces stock at a base.
- * Examples: ammunition used in training, fuel consumed, damaged equipment written off.
- *
- * Database table: "expenditures"
+ * Expenditure entity representing consumption, loss, or usage of equipment at a base.
  */
 @Entity
 @Table(name = "expenditures")

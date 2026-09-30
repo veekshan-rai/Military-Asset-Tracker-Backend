@@ -8,10 +8,7 @@ import com.mat.entity.Equipment;
 import com.mat.repository.EquipmentRepository;
 
 /**
- * EquipmentService
- *
- * Contains the business logic for managing Equipment records.
- * Acts as the middle layer between EquipmentController and EquipmentRepository.
+ * Service for managing Equipment catalog entries.
  */
 @Service
 public class EquipmentService {

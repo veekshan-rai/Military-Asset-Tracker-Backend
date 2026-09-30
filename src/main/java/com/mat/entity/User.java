@@ -14,17 +14,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
- * User entity
- *
- * Represents a user of the Military Asset Tracker system.
- * Each user has login credentials (username, email, password),
- * a role that determines their permissions, and an assigned base.
- *
- * Relationships:
- *   - A User has one Role (stored as an enum, not a separate table).
- *   - A User is assigned to one Base (Many Users → One Base).
- *
- * Database table: "users"
+ * User entity representing system users and their authentication/role credentials.
  */
 @Entity
 @Table(name = "users")

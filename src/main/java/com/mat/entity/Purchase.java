@@ -12,25 +12,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
- * Purchase entity
- *
- * Represents a purchase transaction where a specific quantity of equipment
- * is procured and delivered to a military base. Each purchase record captures:
- *   - WHAT was purchased (Equipment)
- *   - WHERE it was delivered (Base)
- *   - HOW MANY units were purchased (quantity)
- *   - WHEN the purchase occurred (purchaseDate)
- *   - WHO recorded it (recordedBy → User)
- *
- * A Purchase is an "inflow" event — it adds stock to a base.
- * Later, the system will calculate Net Movement (balance) for each base by
- * combining purchases (inflows) with transfers and expenditures (outflows).
- *
- * Examples:
- *   - 500 units of "AK-47" purchased for "Base Alpha", recorded by officer "john_doe"
- *   - 10,000 liters of "Diesel Fuel" purchased for "Base Bravo", recorded by officer "jane_smith"
- *
- * Database table: "purchases"
+ * Purchase entity representing equipment procurement delivered to a base.
  */
 @Entity
 @Table(name = "purchases")

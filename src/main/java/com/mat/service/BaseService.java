@@ -8,10 +8,7 @@ import com.mat.entity.Base;
 import com.mat.repository.BaseRepository;
 
 /**
- * BaseService
- *
- * Contains the business logic for managing Base records.
- * Acts as the middle layer between BaseController and BaseRepository.
+ * Service for managing Base records.
  */
 @Service
 public class BaseService {

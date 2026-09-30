@@ -12,21 +12,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 /**
- * Assignment entity
- *
- * Represents the assignment of equipment to specific personnel at a base.
- * Each assignment record captures:
- *   - WHAT was assigned (Equipment)
- *   - WHERE the assignment happened (Base)
- *   - TO WHOM it was assigned (personnelName)
- *   - HOW MANY units were assigned (quantity)
- *   - WHEN the assignment occurred (assignmentDate)
- *   - WHO recorded it (assignedBy → User)
- *
- * An Assignment is a usage/allocation record. It tracks which personnel
- * received equipment, but does NOT automatically reduce stock balance.
- *
- * Database table: "assignments"
+ * Assignment entity representing equipment assignment to personnel at a base.
+ * Tracks usage/allocation; does NOT reduce stock balance.
  */
 @Entity
 @Table(name = "assignments")

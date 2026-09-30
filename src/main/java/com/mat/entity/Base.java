@@ -8,17 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * Base entity
- *
- * Represents a military base or installation in the system.
- * Each base has a name and a location (e.g., city or region).
- *
- * Relationships:
- *   - A Base can have many Users assigned to it (mapped from the User side).
- *   - Future entities like Purchase, Transfer, and Assignment will reference Base
- *     to track which base an operation belongs to.
- *
- * Database table: "bases"
+ * Base entity representing a military base or installation.
  */
 @Entity
 @Table(name = "bases")

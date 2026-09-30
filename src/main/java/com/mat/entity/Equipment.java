@@ -8,23 +8,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 
 /**
- * Equipment entity
- *
- * Represents a type or category of military equipment that can be tracked.
- * This is a reference/catalog entity — it defines WHAT equipment exists,
- * not how much of it is at a particular base.
- *
- * Examples:
- *   - name: "AK-47",           equipmentType: "Weapon",     unit: "pieces"
- *   - name: "Diesel Fuel",     equipmentType: "Fuel",       unit: "liters"
- *   - name: "Combat Helmet",   equipmentType: "Protective", unit: "pieces"
- *   - name: "Medical Kit",     equipmentType: "Medical",    unit: "kits"
- *
- * Future entities (Purchase, Transfer, Assignment, Expenditure) will reference
- * Equipment to specify which item type is involved in the operation, along with
- * the quantity.
- *
- * Database table: "equipment"
+ * Equipment entity representing a catalog item/category tracked in the MAT system.
  */
 @Entity
 @Table(name = "equipment")
